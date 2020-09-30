@@ -26,6 +26,111 @@ export interface BigBedData {
     exons?: Array<BigBedExon>
 }
 
+export interface BigBedDataNarrowPeak {
+    chr: string,
+    start: number,
+    end: number,
+    name?: string,
+    score?: number,
+    strand?: string,
+    signalValue?: number,
+    pValue?: number,
+    qValue?: number,
+    peak?: number,
+}
+
+export interface BigBedDataBroadPeak {
+    chr: string,
+    start: number,
+    end: number,
+    name?: string,
+    score?: number,
+    strand?: string,
+    signalValue?: number,
+    pValue?: number,
+    qValue?: number,
+}
+
+export interface BigBedDataRNAElement {
+    chr: string,
+    start: number,
+    end: number,
+    name?: string,
+    score?: number,
+    strand?: string, // + or - or . for unknown
+    level?: number, // Expression level such as RPKM or FPKM. Set to -1 for no data
+    signif?: number, // Statistical significance such as IDR. Set to -1 for no data
+    score2?: number, // Additional measurement/count e.g. number of reads. Set to 0 for no data
+}
+
+export interface BigBedDataMethyl {
+    chr: string,
+    start: number,
+    end: number,
+    name?: string,
+    score?: number,
+    strand?: string,
+    thickStart?: number, // Start of where display should be thick (start codon)
+    thickEnd?: number, // End of where display should be thick (stop codon)
+    reserved?: number, // Color value R,G,B
+    readCount?: number, // Number of reads or coverage
+    percentMeth?: number // Percentage of reads that show methylation at this position in the genome
+}
+
+export interface BigBedDataTssPeak {
+    chr: string,
+    start: number,
+    end: number,
+    name?: string,
+    score?: number,
+    strand?: string,
+    count?: number, // Count of reads mapping to this peak
+    gene_id?: string, // Gene identifier
+    gene_name?: string, // Gene name
+    tss_id?: string // TSS identifier,
+    peak_cov?: string, // base by base read coverage of the peak
+}
+
+export interface BigBedDataIdrPeak {
+    chr: string,
+    start: number,
+    end: number,
+    name?: string,
+    score?: number,
+    strand?: string,
+    localIDR?: number, // Local IDR value
+    globalIDR?: number, // Global IDR value
+    rep1_chromStart?: number, // Start position in chromosome of replicate 1 peak
+    rep1_chromEnd?: number, // End position in chromosome of replicate 1 peak
+    rep1_count?: number, // Count (used for ranking) replicate 1
+    rep2_chromStart?: number, // Start position in chromosome of replicate 2 peak
+    rep2_chromEnd?: number, // End position in chromosome of replicate 2 peak
+    rep2_count?: number, // Count (used for ranking) replicate 2
+}
+
+export interface BigBedDataIdrRankedPeak {
+    chr: string,
+    start: number,
+    end: number,
+    name?: string,
+    score?: number,
+    strand?: string,
+    signalValue?: number, // Measurement of enrichment for the region for merged peaks
+    pValue?: number, // p-value of merged peak
+    qValue?: number, // q-value of merged peak
+    summit?: number, // Summit of merged peak
+    localIDR?: number, // Local IDR value, which is -log10(local IDR value)
+    globalIDR?: number, // Global IDR value, which is -log10(global IDR value)
+    chromStart1?: number, // Start position in chromosome of peak 1
+    chromEnd1?: number, // End position in chromosome of peak 1
+    signalValue1?: number, // Signal measure from peak 1
+    summit1?: number, // Summit of peak 1
+    chromStart2?: number, // Start position in chromosome of peak 2
+    chromEnd2?: number, // End position in chromosome of peak 2
+    signalValue2?: number, // Signal measure from peak 2
+    summit2?: number, // Summit of peak 2
+}
+
 export interface BigBedExon {
     start: number,
     end: number
@@ -150,6 +255,104 @@ export class BigWigReader {
     }
 
     /**
+     * Method for reading unzoomed bed data from BigBedNarrowPeak files.
+     * 
+     * @param startChrom Starting chromosome
+     * @param startBase Starting base pair
+     * @param endChrom Ending chromose
+     * @param endBase Ending base pair
+     */
+    async readBigBedDataNarrowPeak(startChrom: string, startBase: number, endChrom: string, 
+        endBase: number): Promise<Array<BigBedDataNarrowPeak>> {
+    return this.readData<BigBedDataNarrowPeak>(startChrom, startBase, endChrom, endBase, 
+        (await this.getHeader()).common!.fullIndexOffset, decodeBigBedDataNarrowPeak);
+    }
+
+    /**
+     * Method for reading unzoomed bed data from BigBedDataBroadPeak files.
+     * 
+     * @param startChrom Starting chromosome
+     * @param startBase Starting base pair
+     * @param endChrom Ending chromose
+     * @param endBase Ending base pair
+     */
+    async readBigBedDataBroadPeak(startChrom: string, startBase: number, endChrom: string, 
+        endBase: number): Promise<Array<BigBedDataBroadPeak>> {
+    return this.readData<BigBedDataBroadPeak>(startChrom, startBase, endChrom, endBase, 
+        (await this.getHeader()).common!.fullIndexOffset, decodeBigBedDataBroadPeak);
+    }
+
+    /**
+     * Method for reading unzoomed bed data from BigBedDataRNAElement files.
+     * 
+     * @param startChrom Starting chromosome
+     * @param startBase Starting base pair
+     * @param endChrom Ending chromose
+     * @param endBase Ending base pair
+     */
+    async readBigBedDataRNAElement(startChrom: string, startBase: number, endChrom: string, 
+        endBase: number): Promise<Array<BigBedDataRNAElement>> {
+    return this.readData<BigBedDataRNAElement>(startChrom, startBase, endChrom, endBase, 
+        (await this.getHeader()).common!.fullIndexOffset, decodeBigBedDataRNAElement);
+    }
+
+    /**
+     * Method for reading unzoomed bed data from BigBedDataMethyl files.
+     * 
+     * @param startChrom Starting chromosome
+     * @param startBase Starting base pair
+     * @param endChrom Ending chromose
+     * @param endBase Ending base pair
+     */
+    async readBigBedDataMethyl(startChrom: string, startBase: number, endChrom: string, 
+        endBase: number): Promise<Array<BigBedDataMethyl>> {
+    return this.readData<BigBedDataMethyl>(startChrom, startBase, endChrom, endBase, 
+        (await this.getHeader()).common!.fullIndexOffset, decodeBigBedDataMethyl);
+    }
+
+    /**
+     * Method for reading unzoomed bed data from BigBedDataTssPeak files.
+     * 
+     * @param startChrom Starting chromosome
+     * @param startBase Starting base pair
+     * @param endChrom Ending chromose
+     * @param endBase Ending base pair
+     */
+    async readBigBedDataTssPeak(startChrom: string, startBase: number, endChrom: string, 
+        endBase: number): Promise<Array<BigBedDataTssPeak>> {
+    return this.readData<BigBedDataTssPeak>(startChrom, startBase, endChrom, endBase, 
+        (await this.getHeader()).common!.fullIndexOffset, decodeBigBedDataTssPeak);
+    }
+
+    /**
+     * Method for reading unzoomed bed data from BigBedDataIdrPeak files.
+     * 
+     * @param startChrom Starting chromosome
+     * @param startBase Starting base pair
+     * @param endChrom Ending chromose
+     * @param endBase Ending base pair
+     */
+    async readBigBedDataIdrPeak(startChrom: string, startBase: number, endChrom: string, 
+        endBase: number): Promise<Array<BigBedDataIdrPeak>> {
+    return this.readData<BigBedDataIdrPeak>(startChrom, startBase, endChrom, endBase, 
+        (await this.getHeader()).common!.fullIndexOffset, decodeBigBedDataIdrPeak);
+    }
+
+    /**
+     * Method for reading unzoomed bed data from BigBedDataIdrRankedPeak files.
+     * 
+     * @param startChrom Starting chromosome
+     * @param startBase Starting base pair
+     * @param endChrom Ending chromose
+     * @param endBase Ending base pair
+     */
+    async readBigBedDataIdrRankedPeak(startChrom: string, startBase: number, endChrom: string, 
+        endBase: number): Promise<Array<BigBedDataIdrRankedPeak>> {
+    return this.readData<BigBedDataIdrRankedPeak>(startChrom, startBase, endChrom, endBase, 
+        (await this.getHeader()).common!.fullIndexOffset, decodeBigBedDataIdrRankedPeak);
+    }
+
+    /**
      * Method for streaming unzoomed bed data from BigBed files.
      * 
      * @param startChrom Starting chromosome
@@ -161,6 +364,104 @@ export class BigWigReader {
             endBase: number): Promise<Readable> {
         return this.streamData<BigBedData>(startChrom, startBase, endChrom, endBase, 
             (await this.getHeader()).common!.fullIndexOffset, decodeBedData);
+    }
+
+    /**
+     * Method for streaming unzoomed bed data from BigBed files.
+     * 
+     * @param startChrom Starting chromosome
+     * @param startBase Starting base pair
+     * @param endChrom Ending chromose
+     * @param endBase Ending base pair
+     */
+    async streamBigBedDataBroadPeak(startChrom: string, startBase: number, endChrom: string, 
+        endBase: number): Promise<Readable> {
+    return this.streamData<BigBedDataBroadPeak>(startChrom, startBase, endChrom, endBase, 
+        (await this.getHeader()).common!.fullIndexOffset, decodeBigBedDataBroadPeak);
+    }
+
+    /**
+     * Method for streaming unzoomed bed data from BigBedDataNarrowPeak files.
+     * 
+     * @param startChrom Starting chromosome
+     * @param startBase Starting base pair
+     * @param endChrom Ending chromose
+     * @param endBase Ending base pair
+     */
+    async streamBigBedDataNarrowPeak(startChrom: string, startBase: number, endChrom: string, 
+        endBase: number): Promise<Readable> {
+    return this.streamData<BigBedDataNarrowPeak>(startChrom, startBase, endChrom, endBase, 
+        (await this.getHeader()).common!.fullIndexOffset, decodeBigBedDataNarrowPeak);
+    }
+
+    /**
+     * Method for streaming unzoomed bed data from BigBedDataRNAElement files.
+     * 
+     * @param startChrom Starting chromosome
+     * @param startBase Starting base pair
+     * @param endChrom Ending chromose
+     * @param endBase Ending base pair
+     */
+    async streamBigBedDataRNAElement(startChrom: string, startBase: number, endChrom: string, 
+        endBase: number): Promise<Readable> {
+    return this.streamData<BigBedDataRNAElement>(startChrom, startBase, endChrom, endBase, 
+        (await this.getHeader()).common!.fullIndexOffset, decodeBigBedDataRNAElement);
+    }
+
+    /**
+     * Method for streaming unzoomed bed data from BigBedDataMethyl files.
+     * 
+     * @param startChrom Starting chromosome
+     * @param startBase Starting base pair
+     * @param endChrom Ending chromose
+     * @param endBase Ending base pair
+     */
+    async streamBigBedDataMethyl(startChrom: string, startBase: number, endChrom: string, 
+        endBase: number): Promise<Readable> {
+    return this.streamData<BigBedDataMethyl>(startChrom, startBase, endChrom, endBase, 
+        (await this.getHeader()).common!.fullIndexOffset, decodeBigBedDataMethyl);
+    }
+
+    /**
+     * Method for streaming unzoomed bed data from BigBedDataTssPeak files.
+     * 
+     * @param startChrom Starting chromosome
+     * @param startBase Starting base pair
+     * @param endChrom Ending chromose
+     * @param endBase Ending base pair
+     */
+    async streamBigBedDataTssPeak(startChrom: string, startBase: number, endChrom: string, 
+        endBase: number): Promise<Readable> {
+    return this.streamData<BigBedDataTssPeak>(startChrom, startBase, endChrom, endBase, 
+        (await this.getHeader()).common!.fullIndexOffset, decodeBigBedDataTssPeak);
+    }
+
+    /**
+     * Method for streaming unzoomed bed data from BigBedDataIdrPeak files.
+     * 
+     * @param startChrom Starting chromosome
+     * @param startBase Starting base pair
+     * @param endChrom Ending chromose
+     * @param endBase Ending base pair
+     */
+    async streamBigBedDataIdrPeak(startChrom: string, startBase: number, endChrom: string, 
+        endBase: number): Promise<Readable> {
+    return this.streamData<BigBedDataIdrPeak>(startChrom, startBase, endChrom, endBase, 
+        (await this.getHeader()).common!.fullIndexOffset, decodeBigBedDataIdrPeak);
+    }
+    
+    /**
+     * Method for streaming unzoomed bed data from BigBedDataIdrRankedPeak files.
+     * 
+     * @param startChrom Starting chromosome
+     * @param startBase Starting base pair
+     * @param endChrom Ending chromose
+     * @param endBase Ending base pair
+     */
+    async streamBigBedDataIdrRankedPeak(startChrom: string, startBase: number, endChrom: string, 
+        endBase: number): Promise<Readable> {
+    return this.streamData<BigBedDataIdrRankedPeak>(startChrom, startBase, endChrom, endBase, 
+        (await this.getHeader()).common!.fullIndexOffset, decodeBigBedDataIdrRankedPeak);
     }
 
     /**
@@ -431,6 +732,497 @@ function decodeBedData(data: ArrayBuffer, filterStartChromIndex: number, filterS
 
             entry.exons = exons;
         }
+        decodedData.push(entry);
+    }
+
+    return decodedData;
+}
+
+
+/**
+ * Extract useful data from sections of raw big binary bed data
+ * 
+ * @param data Raw bed data
+ * @param filterStartChromIndex starting chromosome index used for filtering
+ * @param filterStartBase starting base used for filtering
+ * @param filterEndChromIndex ending chromosome index used for filtering
+ * @param filterEndBase ending base used for filtering
+ * @param chromDict dictionary of indices used by the file to chromosome names, conveniently stored as an array.
+ */
+function decodeBigBedDataNarrowPeak(data: ArrayBuffer, filterStartChromIndex: number, filterStartBase: number, filterEndChromIndex: number,
+    filterEndBase: number, chromDict: Array<string>): Array<BigBedDataNarrowPeak> {
+const decodedData: Array<BigBedDataNarrowPeak> = [];
+const binaryParser = new BinaryParser(data);
+
+const minSize = 3 * 4 + 1;    // Minimum # of bytes required for a bed record
+while (binaryParser.remLength() >= minSize) {
+    const chromIndex = binaryParser.getInt();
+    const chrom = chromDict[chromIndex];
+    const startBase = binaryParser.getInt();
+    const endBase = binaryParser.getInt();
+    const rest = binaryParser.getString();
+
+    if (chromIndex < filterStartChromIndex || (chromIndex === filterStartChromIndex && endBase < filterStartBase)) {
+        continue;
+    } else if (chromIndex > filterEndChromIndex || (chromIndex === filterEndChromIndex && startBase >= filterEndBase)) {
+        break;
+    }
+
+    const entry: BigBedDataNarrowPeak = {
+        chr: chrom,
+        start: startBase,
+        end: endBase
+    }
+
+    let tokens = rest.split("\t");
+    if (tokens.length > 0) {
+        entry.name = tokens[0];
+    }
+    if (tokens.length > 1) {
+        entry.score = parseFloat(tokens[1]);
+    }
+    if (tokens.length > 2) {
+        entry.strand = tokens[2];
+    }
+    if (tokens.length > 3) {
+        entry.signalValue = parseInt(tokens[3]);
+    }
+    if (tokens.length > 4) {
+        entry.pValue = parseInt(tokens[4]);
+    }
+    if (tokens.length > 5) {
+        entry.qValue = parseInt(tokens[5]);
+    }
+    if (tokens.length > 6) {
+        entry.peak = parseInt(tokens[6]);
+    }
+
+    decodedData.push(entry);
+}
+
+return decodedData;
+}
+
+/**
+ * Extract useful data from sections of raw big binary bed data
+ * 
+ * @param data Raw bed data
+ * @param filterStartChromIndex starting chromosome index used for filtering
+ * @param filterStartBase starting base used for filtering
+ * @param filterEndChromIndex ending chromosome index used for filtering
+ * @param filterEndBase ending base used for filtering
+ * @param chromDict dictionary of indices used by the file to chromosome names, conveniently stored as an array.
+ */
+function decodeBigBedDataBroadPeak(data: ArrayBuffer, filterStartChromIndex: number, filterStartBase: number, filterEndChromIndex: number,
+    filterEndBase: number, chromDict: Array<string>): Array<BigBedDataBroadPeak> {
+    const decodedData: Array<BigBedDataBroadPeak> = [];
+    const binaryParser = new BinaryParser(data);
+
+    const minSize = 3 * 4 + 1;    // Minimum # of bytes required for a bed record
+    while (binaryParser.remLength() >= minSize) {
+        const chromIndex = binaryParser.getInt();
+        const chrom = chromDict[chromIndex];
+        const startBase = binaryParser.getInt();
+        const endBase = binaryParser.getInt();
+        const rest = binaryParser.getString();
+
+        if (chromIndex < filterStartChromIndex || (chromIndex === filterStartChromIndex && endBase < filterStartBase)) {
+            continue;
+        } else if (chromIndex > filterEndChromIndex || (chromIndex === filterEndChromIndex && startBase >= filterEndBase)) {
+            break;
+        }
+
+        const entry: BigBedDataBroadPeak = {
+            chr: chrom,
+            start: startBase,
+            end: endBase
+        }
+
+        let tokens = rest.split("\t");
+        if (tokens.length > 0) {
+            entry.name = tokens[0];
+        }
+        if (tokens.length > 1) {
+            entry.score = parseFloat(tokens[1]);
+        }
+        if (tokens.length > 2) {
+            entry.strand = tokens[2];
+        }
+        if (tokens.length > 3) {
+            entry.signalValue = parseInt(tokens[3]);
+        }
+        if (tokens.length > 4) {
+            entry.pValue = parseInt(tokens[4]);
+        }
+        if (tokens.length > 5) {
+            entry.qValue = parseInt(tokens[5]);
+        }
+
+        decodedData.push(entry);
+    }
+
+    return decodedData;
+}
+
+/**
+ * Extract useful data from sections of raw big binary bed data
+ * 
+ * @param data Raw bed data
+ * @param filterStartChromIndex starting chromosome index used for filtering
+ * @param filterStartBase starting base used for filtering
+ * @param filterEndChromIndex ending chromosome index used for filtering
+ * @param filterEndBase ending base used for filtering
+ * @param chromDict dictionary of indices used by the file to chromosome names, conveniently stored as an array.
+ */
+function decodeBigBedDataRNAElement(data: ArrayBuffer, filterStartChromIndex: number, filterStartBase: number, filterEndChromIndex: number,
+    filterEndBase: number, chromDict: Array<string>): Array<BigBedDataRNAElement> {
+    const decodedData: Array<BigBedDataRNAElement> = [];
+    const binaryParser = new BinaryParser(data);
+
+    const minSize = 3 * 4 + 1;    // Minimum # of bytes required for a bed record
+    while (binaryParser.remLength() >= minSize) {
+        const chromIndex = binaryParser.getInt();
+        const chrom = chromDict[chromIndex];
+        const startBase = binaryParser.getInt();
+        const endBase = binaryParser.getInt();
+        const rest = binaryParser.getString();
+
+        if (chromIndex < filterStartChromIndex || (chromIndex === filterStartChromIndex && endBase < filterStartBase)) {
+            continue;
+        } else if (chromIndex > filterEndChromIndex || (chromIndex === filterEndChromIndex && startBase >= filterEndBase)) {
+            break;
+        }
+
+        const entry: BigBedDataRNAElement = {
+            chr: chrom,
+            start: startBase,
+            end: endBase
+        }
+
+        let tokens = rest.split("\t");
+        if (tokens.length > 0) {
+            entry.name = tokens[0];
+        }
+        if (tokens.length > 1) {
+            entry.score = parseFloat(tokens[1]);
+        }
+        if (tokens.length > 2) {
+            entry.strand = tokens[2];
+        }
+        if (tokens.length > 3) {
+            entry.level = parseFloat(tokens[3]);
+        }
+        if (tokens.length > 4) {
+            entry.signif = parseFloat(tokens[4]);
+        }
+        if (tokens.length > 5) {
+            entry.score2 = parseFloat(tokens[5]);
+        }
+
+        decodedData.push(entry);
+    }
+
+    return decodedData;
+}
+
+/**
+ * Extract useful data from sections of raw big binary bed data
+ * 
+ * @param data Raw bed data
+ * @param filterStartChromIndex starting chromosome index used for filtering
+ * @param filterStartBase starting base used for filtering
+ * @param filterEndChromIndex ending chromosome index used for filtering
+ * @param filterEndBase ending base used for filtering
+ * @param chromDict dictionary of indices used by the file to chromosome names, conveniently stored as an array.
+ */
+function decodeBigBedDataMethyl(data: ArrayBuffer, filterStartChromIndex: number, filterStartBase: number, filterEndChromIndex: number,
+    filterEndBase: number, chromDict: Array<string>): Array<BigBedDataMethyl> {
+    const decodedData: Array<BigBedDataMethyl> = [];
+    const binaryParser = new BinaryParser(data);
+
+    const minSize = 3 * 4 + 1;    // Minimum # of bytes required for a bed record
+    while (binaryParser.remLength() >= minSize) {
+        const chromIndex = binaryParser.getInt();
+        const chrom = chromDict[chromIndex];
+        const startBase = binaryParser.getInt();
+        const endBase = binaryParser.getInt();
+        const rest = binaryParser.getString();
+
+        if (chromIndex < filterStartChromIndex || (chromIndex === filterStartChromIndex && endBase < filterStartBase)) {
+            continue;
+        } else if (chromIndex > filterEndChromIndex || (chromIndex === filterEndChromIndex && startBase >= filterEndBase)) {
+            break;
+        }
+
+        const entry: BigBedDataMethyl = {
+            chr: chrom,
+            start: startBase,
+            end: endBase
+        }
+
+        let tokens = rest.split("\t");
+        if (tokens.length > 0) {
+            entry.name = tokens[0];
+        }
+        if (tokens.length > 1) {
+            entry.score = parseInt(tokens[1]);
+        }
+        if (tokens.length > 2) {
+            entry.strand = tokens[2];
+        }
+        if (tokens.length > 3) {
+            entry.thickStart = parseInt(tokens[3]);
+        }
+        if (tokens.length > 4) {
+            entry.thickEnd = parseInt(tokens[4]);
+        }
+        if (tokens.length > 5) {
+            entry.reserved = parseInt(tokens[5]);
+        }
+        if (tokens.length > 6) {
+            entry.readCount = parseInt(tokens[6]);
+        }
+        if (tokens.length > 7) {
+            entry.percentMeth = parseInt(tokens[7]);
+        }
+
+        decodedData.push(entry);
+    }
+
+    return decodedData;
+}
+
+/**
+ * Extract useful data from sections of raw big binary bed data
+ * 
+ * @param data Raw bed data
+ * @param filterStartChromIndex starting chromosome index used for filtering
+ * @param filterStartBase starting base used for filtering
+ * @param filterEndChromIndex ending chromosome index used for filtering
+ * @param filterEndBase ending base used for filtering
+ * @param chromDict dictionary of indices used by the file to chromosome names, conveniently stored as an array.
+ */
+function decodeBigBedDataTssPeak(data: ArrayBuffer, filterStartChromIndex: number, filterStartBase: number, filterEndChromIndex: number,
+    filterEndBase: number, chromDict: Array<string>): Array<BigBedDataTssPeak> {
+    const decodedData: Array<BigBedDataTssPeak> = [];
+    const binaryParser = new BinaryParser(data);
+
+    const minSize = 3 * 4 + 1;    // Minimum # of bytes required for a bed record
+    while (binaryParser.remLength() >= minSize) {
+        const chromIndex = binaryParser.getInt();
+        const chrom = chromDict[chromIndex];
+        const startBase = binaryParser.getInt();
+        const endBase = binaryParser.getInt();
+        const rest = binaryParser.getString();
+
+        if (chromIndex < filterStartChromIndex || (chromIndex === filterStartChromIndex && endBase < filterStartBase)) {
+            continue;
+        } else if (chromIndex > filterEndChromIndex || (chromIndex === filterEndChromIndex && startBase >= filterEndBase)) {
+            break;
+        }
+
+        const entry: BigBedDataTssPeak = {
+            chr: chrom,
+            start: startBase,
+            end: endBase
+        }
+
+        let tokens = rest.split("\t");
+        if (tokens.length > 0) {
+            entry.name = tokens[0];
+        }
+        if (tokens.length > 1) {
+            entry.score = parseFloat(tokens[1]);
+        }
+        if (tokens.length > 2) {
+            entry.strand = tokens[2];
+        }
+        if (tokens.length > 3) {
+            entry.count = parseFloat(tokens[3]);
+        }
+        if (tokens.length > 4) {
+            entry.gene_id = tokens[4];
+        }
+        if (tokens.length > 5) {
+            entry.gene_name = tokens[5];
+        }
+        if (tokens.length > 6) {
+            entry.tss_id = tokens[6];
+        }
+        if (tokens.length > 7) {
+            entry.peak_cov = tokens[7];
+        }
+
+        decodedData.push(entry);
+    }
+
+    return decodedData;
+}
+
+/**
+ * Extract useful data from sections of raw big binary bed data
+ * 
+ * @param data Raw bed data
+ * @param filterStartChromIndex starting chromosome index used for filtering
+ * @param filterStartBase starting base used for filtering
+ * @param filterEndChromIndex ending chromosome index used for filtering
+ * @param filterEndBase ending base used for filtering
+ * @param chromDict dictionary of indices used by the file to chromosome names, conveniently stored as an array.
+ */
+function decodeBigBedDataIdrPeak(data: ArrayBuffer, filterStartChromIndex: number, filterStartBase: number, filterEndChromIndex: number,
+    filterEndBase: number, chromDict: Array<string>): Array<BigBedDataIdrPeak> {
+    const decodedData: Array<BigBedDataIdrPeak> = [];
+    const binaryParser = new BinaryParser(data);
+
+    const minSize = 3 * 4 + 1;    // Minimum # of bytes required for a bed record
+    while (binaryParser.remLength() >= minSize) {
+        const chromIndex = binaryParser.getInt();
+        const chrom = chromDict[chromIndex];
+        const startBase = binaryParser.getInt();
+        const endBase = binaryParser.getInt();
+        const rest = binaryParser.getString();
+
+        if (chromIndex < filterStartChromIndex || (chromIndex === filterStartChromIndex && endBase < filterStartBase)) {
+            continue;
+        } else if (chromIndex > filterEndChromIndex || (chromIndex === filterEndChromIndex && startBase >= filterEndBase)) {
+            break;
+        }
+
+        const entry: BigBedDataIdrPeak = {
+            chr: chrom,
+            start: startBase,
+            end: endBase
+        }
+
+        let tokens = rest.split("\t");
+        if (tokens.length > 0) {
+            entry.name = tokens[0];
+        }
+        if (tokens.length > 1) {
+            entry.score = parseInt(tokens[1]);
+        }
+        if (tokens.length > 2) {
+            entry.strand = tokens[2];
+        }
+        if (tokens.length > 3) {
+            entry.localIDR = parseFloat(tokens[3]);
+        }
+        if (tokens.length > 4) {
+            entry.globalIDR = parseFloat(tokens[4]);
+        }
+        if (tokens.length > 5) {
+            entry.rep1_chromStart = parseInt(tokens[5]);
+        }
+        if (tokens.length > 6) {
+            entry.rep1_chromEnd= parseInt(tokens[6]);
+        }
+        if (tokens.length > 7) {
+            entry.rep1_count = parseFloat(tokens[7]);
+        }
+        if (tokens.length > 8) {
+            entry.rep2_chromStart = parseInt(tokens[8]);
+        }
+        if (tokens.length > 9) {
+            entry.rep2_chromEnd = parseInt(tokens[9]);
+        }
+        if (tokens.length > 10) {
+            entry.rep2_chromEnd = parseFloat(tokens[10]);
+        }
+
+        decodedData.push(entry);
+    }
+
+    return decodedData;
+}
+
+/**
+ * Extract useful data from sections of raw big binary bed data
+ * 
+ * @param data Raw bed data
+ * @param filterStartChromIndex starting chromosome index used for filtering
+ * @param filterStartBase starting base used for filtering
+ * @param filterEndChromIndex ending chromosome index used for filtering
+ * @param filterEndBase ending base used for filtering
+ * @param chromDict dictionary of indices used by the file to chromosome names, conveniently stored as an array.
+ */
+function decodeBigBedDataIdrRankedPeak(data: ArrayBuffer, filterStartChromIndex: number, filterStartBase: number, filterEndChromIndex: number,
+    filterEndBase: number, chromDict: Array<string>): Array<BigBedDataIdrRankedPeak> {
+    const decodedData: Array<BigBedDataIdrRankedPeak> = [];
+    const binaryParser = new BinaryParser(data);
+
+    const minSize = 3 * 4 + 1;    // Minimum # of bytes required for a bed record
+    while (binaryParser.remLength() >= minSize) {
+        const chromIndex = binaryParser.getInt();
+        const chrom = chromDict[chromIndex];
+        const startBase = binaryParser.getInt();
+        const endBase = binaryParser.getInt();
+        const rest = binaryParser.getString();
+
+        if (chromIndex < filterStartChromIndex || (chromIndex === filterStartChromIndex && endBase < filterStartBase)) {
+            continue;
+        } else if (chromIndex > filterEndChromIndex || (chromIndex === filterEndChromIndex && startBase >= filterEndBase)) {
+            break;
+        }
+
+        const entry: BigBedDataIdrRankedPeak = {
+            chr: chrom,
+            start: startBase,
+            end: endBase
+        }
+
+        let tokens = rest.split("\t");
+        if (tokens.length > 0) {
+            entry.name = tokens[0];
+        }
+        if (tokens.length > 1) {
+            entry.score = parseInt(tokens[1]);
+        }
+        if (tokens.length > 2) {
+            entry.strand = tokens[2];
+        }
+        if (tokens.length > 3) {
+            entry.signalValue = parseFloat(tokens[3]);
+        }
+        if (tokens.length > 4) {
+            entry.pValue = parseFloat(tokens[4]);
+        }
+        if (tokens.length > 5) {
+            entry.qValue = parseFloat(tokens[5]);
+        }
+        if (tokens.length > 6) {
+            entry.summit= parseInt(tokens[6]);
+        }
+        if (tokens.length > 7) {
+            entry.localIDR = parseFloat(tokens[7]);
+        }
+        if (tokens.length > 8) {
+            entry.globalIDR = parseInt(tokens[8]);
+        }
+        if (tokens.length > 9) {
+            entry.chromStart1 = parseInt(tokens[9]);
+        }
+        if (tokens.length > 10) {
+            entry.chromEnd1 = parseInt(tokens[10]);
+        }
+        if (tokens.length > 11) {
+            entry.signalValue1 = parseFloat(tokens[11]);
+        }
+        if (tokens.length > 12) {
+            entry.summit1 = parseFloat(tokens[12]);
+        }
+        if (tokens.length > 13) {
+            entry.chromStart2 = parseInt(tokens[13]);
+        }
+        if (tokens.length > 14) {
+            entry.chromEnd2 = parseInt(tokens[14]);
+        }
+        if (tokens.length > 15) {
+            entry.signalValue2 = parseFloat(tokens[15]);
+        }
+        if (tokens.length > 16) {
+            entry.summit2 = parseFloat(tokens[16]);
+        }
+
         decodedData.push(entry);
     }
 
