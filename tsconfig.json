@@ -7,7 +7,7 @@
         "declaration": true,
         "removeComments": true,
         "sourceMap": true,
-        "outDir": "dist",
+        "outDir": "./dist/",
         "strict": true,
         "strictNullChecks": true
     },
